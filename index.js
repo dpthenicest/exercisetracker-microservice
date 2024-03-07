@@ -55,15 +55,11 @@ app.post('/api/users/:_id/exercises', (req, res) => {
     if (!user.log || !Array.isArray(user.log)) {
       // If log doesn't exist or is not an array, initialize it as an empty array
       user.log = [log];
-    } else {
-      // Push data into the k2 array
-      user.log.push(log);
-    }
-    // if count doesn't exist, it is created. else it is incremented by 1
-    if(!user.count){
       user.count = 1;
       counter = user.count;
     } else {
+      // Push data into the k2 array
+      user.log.push(log);
       user.count = user.count + 1;
       counter = user.count;
     }
@@ -76,13 +72,15 @@ app.post('/api/users/:_id/exercises', (req, res) => {
 // Route to handle GET request to retrieve users' exercise logs
 app.get('/api/users/:_id/logs', (req, res) => {
   // Extract parameters from URL
-  const userId = req.params._id;
+  const _id = req.params._id;
   const { from, to, limit } = req.query;
 
   // Function to find a user by _id
   const foundUser = users.find(user => {
     return user._id == _id;
-  })
+  });
+
+  res.json(foundUser);
 })
 
 const listener = app.listen(process.env.PORT || 3000, () => {
