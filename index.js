@@ -77,45 +77,38 @@ app.get('/api/users/:_id/logs', (req, res) => {
   // Extract parameters from URL
   const _id = req.params._id;
   const { from, to, limit } = req.query;
-  let newLog = [];
 
-  if ((!from || !to) && !limit) {
-    // Function to find a user by _id
-    const foundUser = users.find(user => {
-      return user._id == _id;
+  // Function to find a user by _id
+  const foundUser = users.find(user => user._id === _id);
+
+  if (!foundUser) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+
+  if (!foundUser.log || foundUser.log.length === 0) {
+    return res.json({ error: 'No log data saved!' });
+  }
+
+  let newLog = foundUser.log;
+
+  if (from && to) {
+    const startDate = new Date(from);
+    const endDate = new Date(to);
+
+    newLog = newLog.filter(log => {
+      const logDate = new Date(log.date);
+      return logDate >= startDate && logDate <= endDate;
     });
-
-    res.json(foundUser);
   }
 
-  const userData = users.find(user => {
-    return user._id === _id;
-  });
-
-  if ('log' in userData) {
-    const allLogs = userData['log'];
-    let date1Object = new Date(from);
-    const startDate = date1Object.toDateString();
-    let date2Object = new Date(to);
-    const endDate = date2Object.toDateString();
-
-    allLogs.forEach(log => {
-      if(startDate >= log.date && endDate <= log.date){
-        newLog.push(log);
-      }
-    })
-
-    
-  } else {
-    res.json({error: "No log data saved!"});
+  if (limit) {
+    newLog = newLog.slice(0, limit);
   }
 
-  const username = userData.username;
-  const userid = userData._id;
-  const count = userData.count;
+  const { username, _id: userId, count } = foundUser;
 
-  res.json({_id: userid, username: username, count: count, log: newLog});
-})
+  res.json({ _id: userId, username, count, log: newLog });
+});
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
